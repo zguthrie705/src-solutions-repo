@@ -1,0 +1,24 @@
+<% include head %>
+<div class="main-container">
+    <div class="header">
+        <div>
+            <img class="header-logo" src="views/stylesheets/slalom-logo.png" alt=""/>
+        </div>
+        <div class="challenge-progression">
+            <span class="progress-badge <%= rendFile === 'challenge-setup' ? 'active' : '' %>">Challenge Setup</span>
+            <img src="views/stylesheets/arrow-right-solid.svg" alt=""/>
+            <span class="progress-badge <%= rendFile === 'challenge-1' ? 'active' : '' %>">Challenge Round #1</span>
+            <img src="views/stylesheets/arrow-right-solid.svg" alt=""/>
+            <span class="progress-badge <%= rendFile === 'challenge-2' ? 'active' : '' %>">Challenge Round #2</span>
+            <img src="views/stylesheets/arrow-right-solid.svg" alt=""/>
+            <span class="progress-badge <%= rendFile === 'challenge-done' ? 'active' : '' %>">Challenge Complete</span>
+        </div>
+        <div class="current-user">
+            <% if (username) {%>
+                <h3>Current GitHub user: <%= username %></h3>
+            <% } %>
+        </div>
+        <div>
+            <a class="button logout" href="/logout">Log Out</a>
+        </div>
+    </div>
