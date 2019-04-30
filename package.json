@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prestart": "node getEnv.js",
-    "start": "node server.js"
+    "start": "node ./bin/www"
   },
   "dependencies": {
     "@google-cloud/storage": "^2.5.0",
