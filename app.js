@@ -13,13 +13,10 @@ const GitHubStrategy = require('passport-github').Strategy;
 const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 const Octokit = require('@octokit/rest');
 
-const simpleGit = require('simple-git')()
-    .addConfig('user.name', process.env.GITHUB_USERNAME)
-    .addConfig('user.email', process.env.GITHUB_EMAIL);
-
 let authUser = null;
 let currentUser = null;
 let branchName = null;
+let recruitRepo = null;
 
 const app = express();
 
@@ -32,7 +29,7 @@ authOctokit.users.getAuthenticated().then(({data, headers, status}) => {authUser
 
 // Gets challenge repo and searches for user branch
 async function getRepoAndUserBranch(next) {
-    let recruitRepo = await authOctokit.repos.get({owner: authUser.login, repo: process.env.SOLUTIONS_REPO_NAME})
+    recruitRepo = await authOctokit.repos.get({owner: authUser.login, repo: process.env.SOLUTIONS_REPO_NAME})
         .then(({data}) => {return data;})
         .catch(error => {console.log(error)});
 
@@ -52,11 +49,18 @@ async function getRepoAndUserBranch(next) {
 
 async function createUserBranch(next) {
     try {
-        await simpleGit.checkoutBranch(branchName, '940e598')
-            .commit('Initial Commit')
-            .push('origin', branchName, {'--set-upstream': null})
-            .checkout('master')
-            .deleteLocalBranch(branchName);
+        await authOctokit.git.createRef({
+            owner: authUser.login,
+            repo: recruitRepo.name,
+            ref: 'refs/heads/' + branchName,
+            sha: process.env.GITHUB_COMMIT_HASH
+        })
+        .then(() => {
+            console.log('Success!');
+        })
+        .catch(error => {
+            next(error);
+        });
     } catch (e) {
         next(e);
     }
