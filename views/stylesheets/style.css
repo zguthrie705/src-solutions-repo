@@ -1,0 +1,197 @@
+body {
+    margin: 0 !important;
+    font-family: sans-serif;
+    height: 100vh;
+    width: 100vw;
+}
+
+.login-screen {
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.login-screen-img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.8;
+}
+
+.login-info {
+    display: flex;
+    width: fit-content;
+    position: relative;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    background-color: #F2F2F2;
+    border-radius: 4px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    margin: auto;
+}
+
+.login-link {
+    min-height: fit-content;
+    display: flex;
+    padding: 10px 0px;
+    background-color: #DEDEDE;
+    width: 100%;
+    justify-content: center;
+}
+
+.login-header {
+    padding: 5px;
+    min-height: fit-content;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-title {
+    justify-content: center;
+    color: #2A70BA;
+    font-size: xx-large;
+    font-weight: bolder;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.login-subtitle {
+    color: #2A70BA;
+    font-size: large;
+}
+
+.current-user {
+    color: #2A70BA;
+    font-size: large;
+}
+
+.header {
+    overflow: hidden;
+    height: 60px;
+    width: 100vw;
+    color: lightgrey;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #333333;
+    align-items: center;
+}
+
+.button {
+    font-size: x-large;
+    text-decoration: none;
+    background-color: #2A70BA;
+    color: #EEEEEE;
+    padding: 2px 6px 2px 6px;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+    border-radius: 2px;
+    align-items: center;
+    min-height: fit-content;
+}
+
+.progress-badge {
+    font-size: large;
+    background-color: #2A70BA;
+    color: #EEEEEE;
+    padding: 2px 6px 2px 6px;
+    border-top: 1px solid #CCCCCC;
+    border-right: 1px solid #333333;
+    border-bottom: 1px solid #333333;
+    border-left: 1px solid #CCCCCC;
+    border-radius: 4px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.slalom-logo {
+    max-height: 100%;
+    width: 100%;
+}
+
+.login-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.login-text {
+    text-decoration: none;
+    color: white;
+}
+.github-logo {
+    height: 28px;
+    width: 28px;
+}
+
+.logout {
+    margin-right: 12px;
+}
+
+.header-logo {
+    height: 60px;
+    width: 180px;
+}
+
+.main-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.challenge-background {
+    background-color: #DEDEDE;
+    overflow: hidden;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 2;
+    justify-content: space-between;
+}
+
+.challenge-progression {
+    display: flex;
+    width: fit-content;
+    justify-content: space-evenly;
+    height: 30px;
+}
+
+.challenge-window {
+    display: flex;
+    width: 50%;
+    height: 85%;
+    position: relative;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    background-color: #F2F2F2;
+    border-radius: 4px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    margin: auto;
+}
+
+img {
+    height: 100%;
+}
+
+.active {
+    background-color: green;
+}
+
+.no-branch-created {
+    display: flex;
+    flex-direction: column;
+}
+
+.create-footer {
+    display: flex;
+    flex-direction: column;
+}
