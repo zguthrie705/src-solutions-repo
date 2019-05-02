@@ -13,7 +13,7 @@ const GitHubStrategy = require('passport-github').Strategy;
 const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 const Octokit = require('@octokit/rest');
 
-const simpleGit = require('simple-git')(process.env.SOLUTIONS_REPO_LOCAL)
+const simpleGit = require('simple-git')()
     .addConfig('user.name', process.env.GITHUB_USERNAME)
     .addConfig('user.email', process.env.GITHUB_EMAIL);
 
@@ -52,7 +52,8 @@ async function getRepoAndUserBranch(next) {
 
 async function createUserBranch(next) {
     try {
-        await simpleGit.checkoutBranch(branchName, 'HEAD')
+        await simpleGit.checkoutBranch(branchName, '940e598')
+            .commit('Initial Commit')
             .push('origin', branchName, {'--set-upstream': null})
             .checkout('master')
             .deleteLocalBranch(branchName);
