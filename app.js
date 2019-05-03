@@ -15,7 +15,7 @@ const Octokit = require('@octokit/rest');
 
 let authUser = null;
 let currentUser = null;
-let branchName = null;
+let repoName = null;
 let recruitRepo = null;
 let inviteId = null;
 
@@ -28,28 +28,8 @@ const authOctokit = new Octokit({
 
 authOctokit.users.getAuthenticated().then(({data, headers, status}) => {authUser = data;});
 
-// Gets challenge repo and searches for user branch
-async function getRepoAndUserBranch(next) {
-    recruitRepo = await authOctokit.repos.get({owner: authUser.login, repo: process.env.SOLUTIONS_REPO_NAME})
-        .then(({data}) => {return data;})
-        .catch(error => {console.log(error)});
-
-    return await authOctokit.repos.getBranch({owner: authUser.login, repo: recruitRepo.name, branch: branchName})
-        .then(({data}) => {
-            return data;
-        })
-        .catch(error => {
-            if (error.status === 404) {
-                return null;
-            } else {
-                next(error);
-            }
-
-        });
-}
-
 async function getUserSolutionRepo(next) {
-    return await authOctokit.repos.get({owner: authUser.login, repo: branchName})
+    return await authOctokit.repos.get({owner: authUser.login, repo: repoName})
         .then(({data}) => {
             return data;
         })
@@ -65,7 +45,7 @@ async function getUserSolutionRepo(next) {
 async function createUserRepo(next) {
     try {
         await authOctokit.repos.createForAuthenticatedUser({
-            name: branchName,
+            name: repoName,
             private: true
         })
             .then(() => {
@@ -77,7 +57,7 @@ async function createUserRepo(next) {
 
         inviteId = await authOctokit.repos.addCollaborator({
             owner: authUser.login,
-            repo: branchName,
+            repo: repoName,
             username: currentUser.username
         })
             .then(({data, headers, status}) => {
@@ -109,7 +89,7 @@ passport.use(new GitHubStrategy({
     function(accessToken, refreshToken, profile, cb) {
         currentUser = profile;
         app.locals.username = currentUser.username;
-        branchName = currentUser.username + "-solution";
+        repoName = currentUser.username + "-solution";
         return cb(null, profile);
     }));
 
