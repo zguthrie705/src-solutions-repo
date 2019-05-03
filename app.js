@@ -17,6 +17,7 @@ let authUser = null;
 let currentUser = null;
 let branchName = null;
 let recruitRepo = null;
+let inviteId = null;
 
 const app = express();
 
@@ -47,20 +48,53 @@ async function getRepoAndUserBranch(next) {
         });
 }
 
-async function createUserBranch(next) {
-    try {
-        await authOctokit.git.createRef({
-            owner: authUser.login,
-            repo: recruitRepo.name,
-            ref: 'refs/heads/' + branchName,
-            sha: process.env.GITHUB_COMMIT_HASH
-        })
-        .then(() => {
-            console.log('Success!');
+async function getUserSolutionRepo(next) {
+    return await authOctokit.repos.get({owner: authUser.login, repo: branchName})
+        .then(({data}) => {
+            return data;
         })
         .catch(error => {
-            next(error);
+            if (error.status === 404) {
+                return null;
+            } else {
+                next(error);
+            }
         });
+}
+
+async function createUserRepo(next) {
+    try {
+        await authOctokit.repos.createForAuthenticatedUser({
+            name: branchName,
+            private: true
+        })
+            .then(() => {
+                console.log('Solution repository created');
+            })
+            .catch(error => {
+                next(error);
+            });
+
+        inviteId = await authOctokit.repos.addCollaborator({
+            owner: authUser.login,
+            repo: branchName,
+            username: currentUser.username
+        })
+            .then(({data, headers, status}) => {
+                console.log('OAuth User added to list of collaborators');
+                return data.id;
+            })
+            .catch(error => {
+                next(error);
+            });
+
+        await authOctokit.repos.acceptInvitation({invitation_id: inviteId})
+            .then(({data}) => {
+                console.log(data);
+            })
+            .catch(e => {
+                next(e);
+            })
     } catch (e) {
         next(e);
     }
@@ -109,7 +143,7 @@ app.get('/',
     ensureLoggedIn(),
     (req, res, next) => {
         app.locals.rendFile = 'challenge-setup';
-        getRepoAndUserBranch(next).then((data) => {
+        getUserSolutionRepo(next).then((data) => {
             data !== null ? res.redirect('/challenge-1') : res.render('challenge-setup', {error: req.query.error})
         });
     });
@@ -136,7 +170,7 @@ app.get('/challenge-1',
 app.get('/create-branch',
     ensureLoggedIn(),
     (req, res, next) => {
-        createUserBranch(next).then(() => {
+        createUserRepo(next).then(() => {
             try {
                 res.redirect('/');
             } catch(e) {
