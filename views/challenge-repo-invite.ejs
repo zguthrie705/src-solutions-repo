@@ -1,0 +1,13 @@
+<% include challenge-header %>
+<div class="challenge-background">
+    <div class="challenge-window">
+        <span class="login-subtitle">Please click the following link to be added as a collaborator to your solutions
+            repository.</span>
+        <span class="login-subtitle">This private repository is where you will upload your solutions to the
+            challenges.</span>
+        <% if (locals.invite_url) {%>
+            <a href=<%= invite_url %>>Accept Invitation</a>
+        <% } %>
+    </div>
+</div>
+<% include challenge-footer %>

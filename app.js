@@ -15,8 +15,7 @@ const Octokit = require('@octokit/rest');
 
 let authUser = null;
 let currentUser = null;
-let branchName = null;
-let recruitRepo = null;
+let repoName = null;
 
 const app = express();
 
@@ -27,13 +26,8 @@ const authOctokit = new Octokit({
 
 authOctokit.users.getAuthenticated().then(({data, headers, status}) => {authUser = data;});
 
-// Gets challenge repo and searches for user branch
-async function getRepoAndUserBranch(next) {
-    recruitRepo = await authOctokit.repos.get({owner: authUser.login, repo: process.env.SOLUTIONS_REPO_NAME})
-        .then(({data}) => {return data;})
-        .catch(error => {console.log(error)});
-
-    return await authOctokit.repos.getBranch({owner: authUser.login, repo: recruitRepo.name, branch: branchName})
+async function getUserSolutionRepo(next) {
+    return await authOctokit.repos.get({owner: authUser.login, repo: repoName})
         .then(({data}) => {
             return data;
         })
@@ -43,24 +37,70 @@ async function getRepoAndUserBranch(next) {
             } else {
                 next(error);
             }
-
         });
 }
 
-async function createUserBranch(next) {
-    try {
-        await authOctokit.git.createRef({
-            owner: authUser.login,
-            repo: recruitRepo.name,
-            ref: 'refs/heads/' + branchName,
-            sha: process.env.GITHUB_COMMIT_HASH
+async function checkForCollaborator(next) {
+    return await authOctokit.repos.checkCollaborator({
+        owner: authUser.login,
+        repo: repoName,
+        username: currentUser.username
+    })
+        .then(({data, headers, status}) => {
+            return data;
         })
-        .then(() => {
-            console.log('Success!');
+        .catch(error => {
+            if (error.status === 404) {
+                return null;
+            } else {
+                next(error);
+            }
+        })
+}
+
+async function addCollaborator(next) {
+    return await authOctokit.repos.addCollaborator({
+        owner: authUser.login,
+        repo: repoName,
+        username: currentUser.username
+    })
+        .then(({data, headers, status}) => {
+            console.log('OAuth User added to list of collaborators');
+            return data.html_url;
         })
         .catch(error => {
             next(error);
         });
+}
+
+async function getInviteLink(next) {
+    return await authOctokit.repos.listInvitations({owner: authUser.login, repo: repoName})
+        .then(({data, headers, status}) => {
+            let userInvite = null;
+            data.forEach(invite => {
+                if (invite.invitee.login === currentUser.username) {
+                    userInvite = invite.html_url;
+                }
+            });
+            return userInvite;
+        })
+        .catch(error => {
+            next(error);
+        });
+}
+
+async function createUserRepo(next) {
+    try {
+        await authOctokit.repos.createForAuthenticatedUser({
+            name: repoName,
+            private: true
+        })
+            .then(() => {
+                console.log('Solution repository created');
+            })
+            .catch(error => {
+                next(error);
+            });
     } catch (e) {
         next(e);
     }
@@ -75,7 +115,7 @@ passport.use(new GitHubStrategy({
     function(accessToken, refreshToken, profile, cb) {
         currentUser = profile;
         app.locals.username = currentUser.username;
-        branchName = currentUser.username + "-solution";
+        repoName = currentUser.username + "-solution";
         return cb(null, profile);
     }));
 
@@ -109,7 +149,7 @@ app.get('/',
     ensureLoggedIn(),
     (req, res, next) => {
         app.locals.rendFile = 'challenge-setup';
-        getRepoAndUserBranch(next).then((data) => {
+        getUserSolutionRepo(next).then((data) => {
             data !== null ? res.redirect('/challenge-1') : res.render('challenge-setup', {error: req.query.error})
         });
     });
@@ -127,7 +167,23 @@ app.get('/challenge-1',
     (req, res, next) => {
         app.locals.rendFile = 'challenge-1';
         try {
-            res.render('challenge-1', {error: req.query.error});
+            checkForCollaborator(next).then((data) => {
+                if (data === null) {
+                    getInviteLink(next).then((data) => {
+                        if (data === null) {
+                            addCollaborator(next).then((data) => {
+                                app.locals.invite_url = data;
+                                res.render('challenge-repo-invite', {error: req.query.error});
+                            });
+                        } else {
+                            app.locals.invite_url = data;
+                            res.render('challenge-repo-invite', {error: req.query.error});
+                        }
+                    })
+                } else {
+                    res.render('challenge-1', {error: req.query.error});
+                }
+            });
         } catch(e) {
             next(e);
         }
@@ -136,11 +192,11 @@ app.get('/challenge-1',
 app.get('/create-branch',
     ensureLoggedIn(),
     (req, res, next) => {
-        createUserBranch(next).then(() => {
+        createUserRepo(next).then(() => {
             try {
                 res.redirect('/');
             } catch(e) {
-              next(e);
+                next(e);
             }
         }).catch(e => {next(e)});
     });
