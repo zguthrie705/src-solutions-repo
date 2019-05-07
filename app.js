@@ -16,8 +16,6 @@ const Octokit = require('@octokit/rest');
 let authUser = null;
 let currentUser = null;
 let repoName = null;
-let recruitRepo = null;
-let inviteId = null;
 
 const app = express();
 
@@ -42,6 +40,55 @@ async function getUserSolutionRepo(next) {
         });
 }
 
+async function checkForCollaborator(next) {
+    return await authOctokit.repos.checkCollaborator({
+        owner: authUser.login,
+        repo: repoName,
+        username: currentUser.username
+    })
+        .then(({data, headers, status}) => {
+            return data;
+        })
+        .catch(error => {
+            if (error.status === 404) {
+                return null;
+            } else {
+                next(error);
+            }
+        })
+}
+
+async function addCollaborator(next) {
+    return await authOctokit.repos.addCollaborator({
+        owner: authUser.login,
+        repo: repoName,
+        username: currentUser.username
+    })
+        .then(({data, headers, status}) => {
+            console.log('OAuth User added to list of collaborators');
+            return data.html_url;
+        })
+        .catch(error => {
+            next(error);
+        });
+}
+
+async function getInviteLink(next) {
+    return await authOctokit.repos.listInvitations({owner: authUser.login, repo: repoName})
+        .then(({data, headers, status}) => {
+            let userInvite = null;
+            data.forEach(invite => {
+                if (invite.invitee.login === currentUser.username) {
+                    userInvite = invite.html_url;
+                }
+            });
+            return userInvite;
+        })
+        .catch(error => {
+            next(error);
+        });
+}
+
 async function createUserRepo(next) {
     try {
         await authOctokit.repos.createForAuthenticatedUser({
@@ -54,27 +101,6 @@ async function createUserRepo(next) {
             .catch(error => {
                 next(error);
             });
-
-        inviteId = await authOctokit.repos.addCollaborator({
-            owner: authUser.login,
-            repo: repoName,
-            username: currentUser.username
-        })
-            .then(({data, headers, status}) => {
-                console.log('OAuth User added to list of collaborators');
-                return data.id;
-            })
-            .catch(error => {
-                next(error);
-            });
-
-        await authOctokit.repos.acceptInvitation({invitation_id: inviteId})
-            .then(({data}) => {
-                console.log(data);
-            })
-            .catch(e => {
-                next(e);
-            })
     } catch (e) {
         next(e);
     }
@@ -141,7 +167,23 @@ app.get('/challenge-1',
     (req, res, next) => {
         app.locals.rendFile = 'challenge-1';
         try {
-            res.render('challenge-1', {error: req.query.error});
+            checkForCollaborator(next).then((data) => {
+                if (data === null) {
+                    getInviteLink(next).then((data) => {
+                        if (data === null) {
+                            addCollaborator(next).then((data) => {
+                                app.locals.invite_url = data;
+                                res.render('challenge-repo-invite', {error: req.query.error});
+                            });
+                        } else {
+                            app.locals.invite_url = data;
+                            res.render('challenge-repo-invite', {error: req.query.error});
+                        }
+                    })
+                } else {
+                    res.render('challenge-1', {error: req.query.error});
+                }
+            });
         } catch(e) {
             next(e);
         }
@@ -154,7 +196,7 @@ app.get('/create-branch',
             try {
                 res.redirect('/');
             } catch(e) {
-              next(e);
+                next(e);
             }
         }).catch(e => {next(e)});
     });
