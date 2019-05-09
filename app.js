@@ -2,6 +2,8 @@
 
 require('dotenv').config();
 
+const fs = require('fs');
+
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -16,6 +18,9 @@ const Octokit = require('@octokit/rest');
 let authUser = null;
 let currentUser = null;
 let repoName = null;
+
+let buff = fs.readFileSync('README-Solutions.md');
+let readmeContent = buff.toString('base64');
 
 const app = express();
 
@@ -97,6 +102,20 @@ async function createUserRepo(next) {
         })
             .then(() => {
                 console.log('Solution repository created');
+            })
+            .catch(error => {
+                next(error);
+            });
+
+        await authOctokit.repos.createFile({
+            owner: authUser.login,
+            repo: repoName,
+            path: 'README.md',
+            message: 'Initial Commit - Created readme',
+            content: readmeContent
+        })
+            .then(() => {
+                console.log('Readme created.')
             })
             .catch(error => {
                 next(error);

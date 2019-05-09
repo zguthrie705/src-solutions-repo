@@ -186,12 +186,7 @@ img {
     background-color: green;
 }
 
-.no-branch-created {
-    display: flex;
-    flex-direction: column;
-}
-
-.create-footer {
+.challenge-section {
     display: flex;
     flex-direction: column;
 }
