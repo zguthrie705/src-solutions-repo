@@ -5,48 +5,45 @@
             <div class="challenge-title">
                 <span>Challenge #1</span>
             </div>
-            <div class="challenge-description">
+            <div class="scrollable-body">
+                <div class="challenge-description">
                 <span class="description-text">For the first sprint, the lead on your project wants you to generate the
                     foundation for the project
  by creating a basic, containerized web server. When a GET request is made to the root path, the server should send a
  basic response ("Web server initialized!") to showcase the fact that the server is running. This web server should
  be set up with a Dockerfile that generates a functional Docker image from the server source code.</span>
-                <span class="description-text">To pass this stage of the challenge, a Docker image must be generated from
+                    <span class="description-text">To pass this stage of the challenge, a Docker image must be generated from
                     your code and Dockerfile. Then, the Docker
  image must be put into a container and successfully echo the solution string when the server is started.</span>
-            </div>
-            <div class="challenge-description">
-                <span class="login-title">Deliverable</span>
-                <span class="description-text">The following files must be pushed to your repository:</span>
-                <ul class="challenge-list">
-                    <li>The source code for your web server</li>
-                    <li>A Dockerfile that generates an image from your source code</li>
-                </ul>
+                </div>
+                <div class="challenge-description">
+                    <span class="login-title">Deliverable</span>
+                    <span class="description-text">The following files must be pushed to your repository:</span>
+                    <ul class="challenge-list">
+                        <li>The source code for your web server</li>
+                        <li>A Dockerfile that generates an image from your source code</li>
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="right-pane">
-            <div class="challenge-description">
-                <span class="login-title">Deliverable</span>
-                <span class="description-text">The following files must be pushed to your repository:</span>
-                <ul class="challenge-list">
-                    <li>The source code for your web server</li>
-                    <li>A Dockerfile that generates an image from your source code</li>
-                </ul>
-            </div>
             <div class="challenge-description">
                 <span class="login-title">Example</span>
                 <ul class="challenge-list">
                     <li>Input: GET /</li>
                     <li>Output: Web serer initialized!</li>
                 </ul>
-            </div>
-            <div class="challenge-description">
                 <span class="login-title">FAQ</span>
                 <ul class="challenge-list">
                     <li>You can use any web server you desire as long as the Dockerfile is
                         configured to build the image correctly.</li>
                 </ul>
             </div>
+            <% if (locals.repo_url) {%>
+                <div class="challenge-description">
+                    <a class="button challenge-button" target="_blank" href=<%= repo_url %>>Visit Your Solution Repository</a>
+                </div>
+            <% } %>
         </div>
     </div>
 </div>
