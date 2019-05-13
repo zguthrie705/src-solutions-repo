@@ -169,7 +169,12 @@ app.get('/',
     (req, res, next) => {
         app.locals.rendFile = 'challenge-setup';
         getUserSolutionRepo(next).then((data) => {
-            data !== null ? res.redirect('/challenge-1') : res.render('challenge-setup', {error: req.query.error})
+            if (data !== null) {
+                app.locals.repo_url = data.html_url;
+                res.redirect('/challenge-1');
+            } else {
+                res.render('challenge-setup', {error: req.query.error});
+            }
         });
     });
 

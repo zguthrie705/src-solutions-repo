@@ -72,6 +72,14 @@ body {
     font-size: large;
 }
 
+.challenge-title {
+    color: #2A70BA;
+    font-size: 72px;
+    font-weight: bold;
+    height: 20%;
+    background: #DDDDDD;
+}
+
 .header {
     overflow: hidden;
     height: 60px;
@@ -146,12 +154,12 @@ body {
     display: flex;
     flex-direction: column;
 }
-.challenge-background {
+
+.setup-background {
     background-color: #DEDEDE;
     overflow: hidden;
     width: 100vw;
     display: flex;
-    flex-direction: column;
     flex-grow: 2;
     justify-content: space-between;
 }
@@ -165,6 +173,54 @@ body {
 
 .challenge-window {
     display: flex;
+    width: 85%;
+    height: 85%;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    border-radius: 4px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.left-pane {
+    width: 50%;
+    height: 100%;
+    background-color: #F2F2F2;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+}
+
+.challenge-title {
+    display: flex;
+    height: fit-content;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+}
+
+.challenge-description {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 150%;
+    font-size: larger;
+    padding: 10px;
+}
+
+.right-pane {
+    width: 50%;
+    height: 100%;
+    background-color: #F2F2F2;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px 1px 1px 0px;
+    text-align: left;
+}
+
+.setup-window {
+    display: flex;
     width: 50%;
     height: 85%;
     position: relative;
@@ -177,6 +233,7 @@ body {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     margin: auto;
 }
+
 
 img {
     height: 100%;
