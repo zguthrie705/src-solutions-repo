@@ -213,6 +213,15 @@ app.get('/challenge-1',
         }
     });
 
+app.post('/repo-push',
+    (req, res, next) => {
+        try {
+            res.sendStatus(200);
+        } catch(e) {
+            next(e);
+        }
+    });
+
 app.get('/create-branch',
     ensureLoggedIn(),
     (req, res, next) => {
