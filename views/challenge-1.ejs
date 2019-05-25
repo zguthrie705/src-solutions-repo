@@ -45,7 +45,9 @@
             </div>
             <% if (locals.repo_url) {%>
                 <div class="challenge-description">
-                    <a class="button challenge-button" target="_blank" href=<%= repo_url %>>Visit Your Solution Repository</a>
+                    <a class="button challenge-button" href="/build">Trigger Autograder</a>
+                    <a class="button challenge-button" target="_blank" href=<%= repo_url %>>Visit Your Solution
+                        Repository</a>
                 </div>
             <% } %>
         </div>

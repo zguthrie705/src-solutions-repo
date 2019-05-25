@@ -2,9 +2,7 @@
 
 const fs = require('fs');
 const { Storage } = require('@google-cloud/storage');
-const gcs = new Storage({
-    keyFilename: '/Users/zach.guthrie/Downloads/test-project-43aa9417647e.json'
-});
+const gcs = new Storage();
 
 const dotEnvExists = fs.existsSync('.env');
 if (dotEnvExists) {

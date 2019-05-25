@@ -15,9 +15,28 @@ const GitHubStrategy = require('passport-github').Strategy;
 const ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 const Octokit = require('@octokit/rest');
 
+// Imports the Google Cloud client libraries
+const {Storage} = require('@google-cloud/storage');
+const {google} = require('googleapis');
+
+const storage = new Storage();
+const bucketName = 'solutions-' + process.env.GCP_PROJECT_NAME;
+const storageBucket = storage.bucket(bucketName);
+
+const cloudBuild = google.cloudbuild('v1');
+
 let authUser = null;
 let currentUser = null;
 let repoName = null;
+let archiveName = null;
+let cloudAuthUser = null;
+
+google.auth.getClient({
+    // Scopes can be specified either as an array or as a single, space-delimited string.
+    scopes: ['https://www.googleapis.com/auth/cloud-platform']
+}).then(data => {
+    cloudAuthUser = data;
+});
 
 let buff = fs.readFileSync('README-Solutions.md');
 let readmeContent = buff.toString('base64');
@@ -52,11 +71,13 @@ async function checkForCollaborator(next) {
         username: currentUser.username
     })
         .then(({data, headers, status}) => {
-            return data;
+            if (status === 204) {
+                return true;
+            }
         })
         .catch(error => {
             if (error.status === 404) {
-                return null;
+                return false;
             } else {
                 next(error);
             }
@@ -125,6 +146,30 @@ async function createUserRepo(next) {
     }
 }
 
+async function getArchiveData(next) {
+    return await authOctokit.repos.getArchiveLink({
+        owner: authUser.login,
+        repo: repoName,
+        archive_format: 'tarball',
+        ref: 'master'
+    }).then(({data, headers, status}) => {
+        return data;
+    }).catch(e => {
+        next(e);
+    })
+}
+
+async function saveArchiveData(archiveData, next) {
+    const tarball = storageBucket.file(archiveName);
+    await tarball.save(archiveData, function(err) {
+        if(!err) {
+            console.log("Successfully created archive.");
+        } else {
+            next(err);
+        }
+    });
+}
+
 // Configure the GitHub Strategy for use by Passport
 passport.use(new GitHubStrategy({
         clientID: process.env.GITHUB_CLIENT_ID,
@@ -135,6 +180,7 @@ passport.use(new GitHubStrategy({
         currentUser = profile;
         app.locals.username = currentUser.username;
         repoName = currentUser.username + "-solution";
+        archiveName = repoName + '.tar.gz';
         return cb(null, profile);
     }));
 
@@ -192,7 +238,7 @@ app.get('/challenge-1',
         app.locals.rendFile = 'challenge-1';
         try {
             checkForCollaborator(next).then((data) => {
-                if (data === null) {
+                if (data === false) {
                     getInviteLink(next).then((data) => {
                         if (data === null) {
                             addCollaborator(next).then((data) => {
@@ -207,6 +253,45 @@ app.get('/challenge-1',
                 } else {
                     res.render('challenge-1', {error: req.query.error});
                 }
+            });
+        } catch(e) {
+            next(e);
+        }
+    });
+
+app.get('/build',
+    ensureLoggedIn(),
+    (req, res, next) => {
+        try {
+            getArchiveData(next).then((data) => {
+                saveArchiveData(data, next).then(() => {
+                    cloudBuild.projects.builds.create({
+                        auth: cloudAuthUser,
+                        projectId: process.env.GCP_PROJECT_NAME,
+                        requestBody: {
+                            source: {
+                                storageSource: {
+                                    bucket: bucketName,
+                                    object: archiveName
+                                }
+                            },
+                            steps: [
+                                {
+                                    name: "gcr.io/cloud-builders/gcloud",
+                                    args: ["app", "deploy"]
+                                }
+                            ]
+                        }
+                    }).then(data => {
+                        res.sendStatus(200);
+                        console.log('Build began');
+                        res.redirect('/challenge-1');
+                    }).catch(e => {
+                        next(e);
+                    });
+                });
+            }).catch(e => {
+                next(e);
             });
         } catch(e) {
             next(e);
