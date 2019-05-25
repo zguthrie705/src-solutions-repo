@@ -159,11 +159,33 @@ async function getArchiveData(next) {
     })
 }
 
-async function saveArchiveData(archiveData, next) {
+async function beginBuildAttempt(archiveData, next) {
     const tarball = storageBucket.file(archiveName);
     await tarball.save(archiveData, function(err) {
         if(!err) {
             console.log("Successfully created archive.");
+            cloudBuild.projects.builds.create({
+                auth: cloudAuthUser,
+                projectId: process.env.GCP_PROJECT_NAME,
+                requestBody: {
+                    source: {
+                        storageSource: {
+                            bucket: bucketName,
+                            object: archiveName
+                        }
+                    },
+                    steps: [
+                        {
+                            name: "gcr.io/cloud-builders/gcloud",
+                            args: ["app", "deploy"]
+                        }
+                    ]
+                }
+            }).then(data => {
+                console.log('Build Began');
+            }).catch(e => {
+                next(e);
+            });
         } else {
             next(err);
         }
@@ -264,31 +286,8 @@ app.get('/build',
     (req, res, next) => {
         try {
             getArchiveData(next).then((data) => {
-                saveArchiveData(data, next).then(() => {
-                    cloudBuild.projects.builds.create({
-                        auth: cloudAuthUser,
-                        projectId: process.env.GCP_PROJECT_NAME,
-                        requestBody: {
-                            source: {
-                                storageSource: {
-                                    bucket: bucketName,
-                                    object: archiveName
-                                }
-                            },
-                            steps: [
-                                {
-                                    name: "gcr.io/cloud-builders/gcloud",
-                                    args: ["app", "deploy"]
-                                }
-                            ]
-                        }
-                    }).then(data => {
-                        res.sendStatus(200);
-                        console.log('Build began');
-                        res.redirect('/challenge-1');
-                    }).catch(e => {
-                        next(e);
-                    });
+                beginBuildAttempt(data, next).then(() => {
+                    res.redirect('/challenge-1');
                 });
             }).catch(e => {
                 next(e);
