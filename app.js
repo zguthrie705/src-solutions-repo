@@ -25,6 +25,7 @@ const storageBucket = storage.bucket(bucketName);
 
 const cloudBuild = google.cloudbuild('v1');
 
+let archiveGeneration = null;
 let authUser = null;
 let currentUser = null;
 let repoName = null;
@@ -159,39 +160,73 @@ async function getArchiveData(next) {
     })
 }
 
-async function beginBuildAttempt(archiveData, next) {
+async function createUpdatedCloudArchive(archiveData) {
     const tarball = storageBucket.file(archiveName);
-    await tarball.save(archiveData, function(err) {
-        if(!err) {
-            console.log("Successfully created archive.");
-            cloudBuild.projects.builds.create({
-                auth: cloudAuthUser,
-                projectId: process.env.GCP_PROJECT_NAME,
-                requestBody: {
-                    source: {
-                        storageSource: {
-                            bucket: bucketName,
-                            object: archiveName
-                        }
-                    },
-                    steps: [
-                        {
-                            name: "gcr.io/cloud-builders/gcloud",
-                            args: ["app", "deploy"]
-                        }
-                    ]
-                }
-            }).then(data => {
-                console.log('Build Began');
-            }).catch(e => {
-                next(e);
-            });
-        } else {
-            next(err);
-        }
-    });
+    await tarball.save(archiveData);
 }
 
+async function getArchiveGeneration() {
+    const tarball = storageBucket.file(archiveName);
+    return await tarball.getMetadata();
+}
+
+async function beginCloudBuild(next) {
+    cloudBuild.projects.builds.create({
+        auth: cloudAuthUser,
+        projectId: process.env.GCP_PROJECT_NAME,
+        requestBody: {
+            source: {
+                storageSource: {
+                    bucket: bucketName,
+                    object: archiveName
+                }
+            },
+            steps: [
+                {
+                    name: 'gcr.io/cloud-builders/gsutil',
+                    args: [
+                        'cp',
+                        'gs://' + bucketName + '/' + archiveName,
+                        '.'
+                    ]
+                },
+                {
+                    name: 'ubuntu',
+                    args: [
+                        'tar',
+                        '-xvzf',
+                        './' + archiveName
+                    ]
+                },
+                /*{
+                    name: 'gcr.io/cloud-builders/gcloud',
+                    args: [
+                        'app',
+                        'deploy'
+                    ],
+                    dir: './zguthrie705-' + repoName + '-1aaf462b016a804a03e3ad3f45c23f3d15836d7d'
+                }*/
+                {
+                    name: 'gcr.io/cloud-builders/docker',
+                    args: [
+                        "build",
+                        "-t",
+                        "gcr.io/$PROJECT_ID/solution",
+                        "./zguthrie705-" + repoName + '-1aaf462b016a804a03e3ad3f45c23f3d15836d7d'
+                    ]
+                }
+            ],
+            images: [
+                "gcr.io/$PROJECT_ID/solution"
+            ]
+
+        }
+    }).then((data) => {
+        console.log('Build Began');
+    }).catch(e => {
+        next(e);
+    });
+}
 // Configure the GitHub Strategy for use by Passport
 passport.use(new GitHubStrategy({
         clientID: process.env.GITHUB_CLIENT_ID,
@@ -286,9 +321,24 @@ app.get('/build',
     (req, res, next) => {
         try {
             getArchiveData(next).then((data) => {
-                beginBuildAttempt(data, next).then(() => {
-                    res.redirect('/challenge-1');
+                createUpdatedCloudArchive(data).then((err) => {
+                    if (!err) {
+                        getArchiveGeneration().then((data) => {
+                            const metadata = data[0];
+                            archiveGeneration = metadata.generation;
+                            beginCloudBuild(next).then(() => {
+                                res.redirect('/challenge-1');
+                            });
+                        }).catch(e => {
+                            next(e);
+                        });
+                    } else {
+                        next(err);
+                    }
+                }).catch(e => {
+                    next(e);
                 });
+
             }).catch(e => {
                 next(e);
             });
