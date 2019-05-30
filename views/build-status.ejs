@@ -1,0 +1,18 @@
+<% include challenge-header %>
+<div class="setup-background">
+    <div class="challenge-window">
+        <div class="left-pane">
+            <span>Current build ID: <%= locals.buildId %></span>
+            <span>Current build status: <%= locals.buildStatus %></span>
+        </div>
+        <div class="right-pane">
+            <a class="button challenge-button" href="/challenge-1">Return to Challenge #1 Description</a>
+            <% if (locals.buildStatus === 'SUCCESS') { %>
+                <a class="button challenge-button" href="/challenge-2">Continue to Challenge #2</a>
+            <% } else if (locals.buildStatus === 'FAILURE') { %>
+                <a class="button challenge-button" href="/build">Trigger Autograder</a>
+            <% } %>
+        </div>
+    </div>
+</div>
+<% include challenge-footer %>

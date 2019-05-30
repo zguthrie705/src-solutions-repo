@@ -31,6 +31,7 @@ let currentUser = null;
 let repoName = null;
 let archiveName = null;
 let cloudAuthUser = null;
+let buildId = null;
 
 google.auth.getClient({
     // Scopes can be specified either as an array or as a single, space-delimited string.
@@ -170,17 +171,34 @@ async function getArchiveGeneration() {
     return await tarball.getMetadata();
 }
 
+async function getLatestBuildId(next) {
+    return await cloudBuild.projects.builds.list({
+        auth: cloudAuthUser,
+        projectId: process.env.GCP_PROJECT_NAME,
+    }).then(({data, headers, status}) => {
+        return data;
+    }).catch(e => {
+        next(e);
+    })
+}
+
+async function getBuildStatus(id, next) {
+    return await cloudBuild.projects.builds.get({
+        auth: cloudAuthUser,
+        projectId: process.env.GCP_PROJECT_NAME,
+        id: buildId
+    }).then(({data, headers, status}) => {
+        return data.status;
+    }).catch(e => {
+        next(e);
+    })
+}
+
 async function beginCloudBuild(next) {
-    cloudBuild.projects.builds.create({
+    return await cloudBuild.projects.builds.create({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
         requestBody: {
-            source: {
-                storageSource: {
-                    bucket: bucketName,
-                    object: archiveName
-                }
-            },
             steps: [
                 {
                     name: 'gcr.io/cloud-builders/gsutil',
@@ -193,36 +211,50 @@ async function beginCloudBuild(next) {
                 {
                     name: 'ubuntu',
                     args: [
-                        'tar',
-                        '-xvzf',
-                        './' + archiveName
+                        'mkdir',
+                        repoName
                     ]
                 },
-                /*{
+                {
+                    name: 'ubuntu',
+                    args: [
+                        'tar',
+                        '-xvzf',
+                        './' + archiveName,
+                        '-C',
+                        repoName,
+                        '--strip-components',
+                        '1'
+                    ]
+                },
+                {
                     name: 'gcr.io/cloud-builders/gcloud',
                     args: [
                         'app',
-                        'deploy'
+                        'deploy',
+                        '-v',
+                        repoName,
+                        '--no-promote'
                     ],
-                    dir: './zguthrie705-' + repoName + '-1aaf462b016a804a03e3ad3f45c23f3d15836d7d'
-                }*/
+                    dir: './' + repoName
+                },
                 {
-                    name: 'gcr.io/cloud-builders/docker',
+                    name: 'gcr.io/cloud-builders/curl',
                     args: [
-                        "build",
-                        "-t",
-                        "gcr.io/$PROJECT_ID/solution",
-                        "./zguthrie705-" + repoName + '-1aaf462b016a804a03e3ad3f45c23f3d15836d7d'
+                        '-H',
+                        'Content-Type: application/x-www-form-urlencoded',
+                        '-d',
+                        'name=Jimmy&occupation=Space%20Cowboy',
+                        '-X',
+                        'POST',
+                        'https://' + repoName + '-dot-astral-subject-238413.appspot.com/'
                     ]
                 }
-            ],
-            images: [
-                "gcr.io/$PROJECT_ID/solution"
             ]
-
         }
-    }).then((data) => {
+    }).then(({data, headers, status}) => {
         console.log('Build Began');
+        return data.metadata.build.id;
     }).catch(e => {
         next(e);
     });
@@ -316,6 +348,32 @@ app.get('/challenge-1',
         }
     });
 
+app.get('/build-status',
+    ensureLoggedIn(),
+    (req, res, next) => {
+        try {
+            app.locals.rendFile = 'challenge-1';
+            if (!buildId) {
+                getLatestBuildId(next).then((data) => {
+                    buildId = data.builds[0].source === null ? data.builds[0].id : data.builds[1].id;
+                    app.locals.buildId = buildId;
+                    getBuildStatus(buildId, next).then(data => {
+                        app.locals.buildStatus = data;
+                        res.render('build-status', {error: req.query.error});
+                    }).catch(e => next(e));
+                });
+            } else {
+                getBuildStatus(buildId, next).then(data => {
+                    app.locals.buildStatus = data;
+                    res.render('build-status', {error: req.query.error});
+                }).catch(e => next(e));
+            }
+        } catch(e) {
+            next(e);
+        }
+
+    });
+
 app.get('/build',
     ensureLoggedIn(),
     (req, res, next) => {
@@ -326,8 +384,9 @@ app.get('/build',
                         getArchiveGeneration().then((data) => {
                             const metadata = data[0];
                             archiveGeneration = metadata.generation;
-                            beginCloudBuild(next).then(() => {
-                                res.redirect('/challenge-1');
+                            beginCloudBuild(next).then((data) => {
+                                app.locals.buildId = data;
+                                res.redirect('/build-status');
                             });
                         }).catch(e => {
                             next(e);
