@@ -175,6 +175,7 @@ async function getLatestBuildId(next) {
     return await cloudBuild.projects.builds.list({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
+        filter: 'tags=\"zguthrie705-solution\"'
     }).then(({data, headers, status}) => {
         return data;
     }).catch(e => {
@@ -250,7 +251,8 @@ async function beginCloudBuild(next) {
                         'https://' + repoName + '-dot-astral-subject-238413.appspot.com/'
                     ]
                 }
-            ]
+            ],
+            tags: [repoName]
         }
     }).then(({data, headers, status}) => {
         console.log('Build Began');
@@ -353,21 +355,14 @@ app.get('/build-status',
     (req, res, next) => {
         try {
             app.locals.rendFile = 'challenge-1';
-            if (!buildId) {
-                getLatestBuildId(next).then((data) => {
-                    buildId = data.builds[0].source === null ? data.builds[0].id : data.builds[1].id;
-                    app.locals.buildId = buildId;
-                    getBuildStatus(buildId, next).then(data => {
-                        app.locals.buildStatus = data;
-                        res.render('build-status', {error: req.query.error});
-                    }).catch(e => next(e));
-                });
-            } else {
+            getLatestBuildId(next).then((data) => {
+                buildId = data.builds[0].id;
+                app.locals.buildId = buildId;
                 getBuildStatus(buildId, next).then(data => {
                     app.locals.buildStatus = data;
                     res.render('build-status', {error: req.query.error});
                 }).catch(e => next(e));
-            }
+            });
         } catch(e) {
             next(e);
         }
