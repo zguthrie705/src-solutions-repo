@@ -175,7 +175,7 @@ async function getLatestBuildId(next) {
     return await cloudBuild.projects.builds.list({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
-        filter: 'tags=\"zguthrie705-solution\"'
+        filter: 'tags=\"' + repoName + '\"'
     }).then(({data, headers, status}) => {
         return data;
     }).catch(e => {
