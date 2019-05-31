@@ -31,6 +31,7 @@ let currentUser = null;
 let repoName = null;
 let archiveName = null;
 let cloudAuthUser = null;
+let currentChallenge = null;
 
 google.auth.getClient({
     // Scopes can be specified either as an array or as a single, space-delimited string.
@@ -188,11 +189,15 @@ async function getArchiveGeneration() {
 }
 
 async function getLatestBuildId(next) {
+    const filterString = 'tags=\"' + repoName + '-' + currentChallenge + '\"';
     return await cloudBuild.projects.builds.list({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
-        filter: 'tags=\"' + repoName + '\"'
+        filter: filterString
     }).then(({data, headers, status}) => {
+        if (data.builds === undefined) {
+            return null;
+        }
         return data.builds[0].id;
     }).catch(e => {
         next(e);
@@ -268,7 +273,7 @@ async function beginCloudBuild(next) {
                     ]
                 }
             ],
-            tags: [repoName]
+            tags: [repoName + '-' + currentChallenge]
         }
     }).then(({data, headers, status}) => {
         console.log('Build Began');
@@ -342,7 +347,8 @@ app.get('/login', function(req, res, next) {
 app.get('/challenge-1',
     ensureLoggedIn(),
     (req, res, next) => {
-        app.locals.rendFile = 'challenge-1';
+        currentChallenge = 'challenge-1';
+        app.locals.rendFile = currentChallenge;
         try {
             checkForCollaborator(next).then((data) => {
                 if (data === false) {
@@ -366,17 +372,31 @@ app.get('/challenge-1',
         }
     });
 
+app.get('/challenge-2',
+    ensureLoggedIn(),
+    (req, res, next) => {
+        currentChallenge = 'challenge-2';
+        app.locals.rendFile = currentChallenge;
+        res.render('challenge-2', {error: req.query.error});
+    });
+
 app.get('/build-status',
     ensureLoggedIn(),
     (req, res, next) => {
         try {
             app.locals.rendFile = 'challenge-1';
             getLatestBuildId(next).then((data) => {
-                app.locals.buildId = data;
-                getBuildStatus(app.locals.buildId, next).then(data => {
+                if (data === null) {
+                    app.locals.buildId = data;
                     app.locals.buildStatus = data;
                     res.render('build-status', {error: req.query.error});
-                }).catch(e => next(e));
+                } else {
+                    app.locals.buildId = data;
+                    getBuildStatus(app.locals.buildId, next).then(data => {
+                        app.locals.buildStatus = data;
+                        res.render('build-status', {error: req.query.error});
+                    }).catch(e => next(e));
+                }
             });
         } catch(e) {
             next(e);
@@ -395,7 +415,6 @@ app.get('/build',
                             const metadata = data[0];
                             archiveGeneration = metadata.generation;
                             beginCloudBuild(next).then((data) => {
-                                app.locals.buildId = data;
                                 res.redirect('/build-status');
                             });
                         }).catch(e => {

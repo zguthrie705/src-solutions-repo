@@ -2,12 +2,17 @@
 <div class="setup-background">
     <div class="challenge-window">
         <div class="left-pane">
-            <span>Current build ID: <%= locals.buildId %></span>
-            <span>Current build status: <%= locals.buildStatus %></span>
+            <% if (locals.buildId == null) { %>
+                <span>You currently have no builds generated for this challenge. Test your code's functionality by
+                    pressing the "Start Autograder" button on the right side of the screen.</span>
+            <% } else { %>
+                <span>Current build ID: <%= locals.buildId %></span>
+                <span>Current build status: <%= locals.buildStatus %></span>
+            <% } %>
         </div>
         <div class="right-pane">
             <a class="button challenge-button" href="/challenge-1">Return to Challenge #1 Description</a>
-            <% if (locals.buildStatus !== 'SUCCESS') { %>
+            <% if (locals.buildStatus === 'SUCCESS') { %>
                 <a class="button challenge-button" href="/challenge-2">Continue to Challenge #2</a>
             <% } else { %>
                 <a class="button challenge-button" href="/build">Trigger Autograder</a>
