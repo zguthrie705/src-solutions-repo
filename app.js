@@ -31,7 +31,6 @@ let currentUser = null;
 let repoName = null;
 let archiveName = null;
 let cloudAuthUser = null;
-let buildId = null;
 
 google.auth.getClient({
     // Scopes can be specified either as an array or as a single, space-delimited string.
@@ -204,7 +203,7 @@ async function getBuildStatus(id, next) {
     return await cloudBuild.projects.builds.get({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
-        id: buildId
+        id: id
     }).then(({data, headers, status}) => {
         return data.status;
     }).catch(e => {
@@ -373,9 +372,8 @@ app.get('/build-status',
         try {
             app.locals.rendFile = 'challenge-1';
             getLatestBuildId(next).then((data) => {
-                buildId = data;
-                app.locals.buildId = buildId;
-                getBuildStatus(buildId, next).then(data => {
+                app.locals.buildId = data;
+                getBuildStatus(app.locals.buildId, next).then(data => {
                     app.locals.buildStatus = data;
                     res.render('build-status', {error: req.query.error});
                 }).catch(e => next(e));

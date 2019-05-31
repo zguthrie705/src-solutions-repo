@@ -18,24 +18,31 @@ You are a consultant that has been recently assigned to a new client, Charon Cru
  
 ### Challenge #1
 For the first sprint, the lead on your project wants you to generate the foundation for the project
- by creating a basic, containerized web server. When a GET request is made to the root path, the server should send a
- basic response ("Web server initialized!") to showcase the fact that the server is running. This web server should 
- be set up with a Dockerfile that generates a functional Docker image from the server source code.
+ by creating a basic, containerized web server. When a POST request is made to the root path, the server should send 
+ the contents of the request body in the response (i.e. sending a POST request with "test" in the body should return 
+ a response with "test" in the body). This web server should be set up with a Dockerfile that generates a functional
+ Docker image from the server source code.
   
-Submit your source code for the web server and the Dockerfile to your solutions repository. An autograder will build
-your image from the code and Dockerfile, containerize the image, and send a request to the root path. If your server 
-responds back correctly, you will move on to the next round.
+Submit your source code for the web server and the Dockerfile to your solutions repository. This solution repository 
+contains an app.yaml file.
+#### DO NOT TOUCH THE APP.YAML FILE
+This file is configured to deploy your web server to Google Cloud using the settings you define in your Dockerfile. 
 
 #### Deliverable
 The following files must be pushed to your repository:
  * The source code for your web server 
  * A Dockerfile that generates an image from your source code
 #### Example
- * Input: GET /
- * Output: Web server initialized!
+ ##### Input:  
+ * POST /
+ * Request body: "Hello World"
+ ##### Output:  
+ * 200 status  
+ * Response body: "Hello World"
 #### FAQ
  * You can use any web server you desire as long as the Dockerfile is configured to build the image 
  correctly.
+ * Your web server MUST be set to listen on port 8080. This is the port that App Engine instances communicate on.
 
 ### Challenge #2
 The circus has come to Savannah! This circus is renowned all over the world for its incredible animal-based acts, and 

@@ -11,15 +11,16 @@
                         client, Transatlantic Transport Inc. This client has asked for an online application that can
                         help them handle the transportation of various goods across the Atlantic Ocean. You are
                         tasked with building this web app from the ground up.</span>
-                    <span class="description-text">For the first sprint, the lead on your project wants you to generate the
-                        foundation for the project by creating a basic, containerized web server. When a GET request
-                        is made to the root path, the server should send a basic response ("Web server initialized!")
-                        to showcase the fact that the server is running. This web server should be set up with a
-                        Dockerfile that generates a functional Docker image from the server source code.</span>
-                    <span class="description-text">Submit your source code for the web server and the Dockerfile to
-                        your solutions repository. An autograder will build your image from the code and Dockerfile,
-                        containerize the image, and send a request to the root path. If your server responds back
-                        correctly, you will move on to the next round.
+                    <span class="description-text">For the first sprint, the lead on your project wants you to generate
+                        the foundation for the project by creating a basic, containerized web server. When a POST
+                        request is made to the root path, the server should send the contents of the request body in
+                        the response (i.e. sending a POST request with "test" in the body should return a response
+                        with "test" in the body). This web server should be set up with a Dockerfile that generates a
+                        functional Docker image from the server source code.</span>
+                    <span class="description-text">Submit your source code for the web server and the Dockerfile to your
+                        solutions repository. This solution repository contains an app.yaml file. DO NOT TOUCH THE
+                        APP.YAML FILE. This file is configured to deploy your web server to Google Cloud using the
+                        settings you define in your Dockerfile.
                     </span>
                 </div>
             </div>
@@ -34,13 +35,25 @@
                 </ul>
                 <span class="login-title">Example</span>
                 <ul class="challenge-list">
-                    <li>Input: GET /</li>
-                    <li>Output: Web serer initialized!</li>
+                    <li>Input:
+                        <ul>
+                            <li>POST /</li>
+                            <li>Request body: "Hello World"</li>
+                        </ul>
+                    </li>
+                    <li>Output:
+                        <ul>
+                            <li>200 Status</li>
+                            <li>Response body: "Hello World"</li>
+                        </ul>
+                    </li>
                 </ul>
                 <span class="login-title">FAQ</span>
                 <ul class="challenge-list">
                     <li>You can use any web server you desire as long as the Dockerfile is
                         configured to build the image correctly.</li>
+                    <li>Your web server MUST be set to listen on port 8080. This is the port that App Engine instances
+                        communicate on.</li>
                 </ul>
             </div>
             <% if (locals.repo_url) {%>

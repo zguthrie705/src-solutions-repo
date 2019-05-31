@@ -7,7 +7,7 @@
         </div>
         <div class="right-pane">
             <a class="button challenge-button" href="/challenge-1">Return to Challenge #1 Description</a>
-            <% if (locals.buildStatus === 'SUCCESS') { %>
+            <% if (locals.buildStatus !== 'SUCCESS') { %>
                 <a class="button challenge-button" href="/challenge-2">Continue to Challenge #2</a>
             <% } else { %>
                 <a class="button challenge-button" href="/build">Trigger Autograder</a>
