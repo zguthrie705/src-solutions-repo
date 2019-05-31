@@ -43,6 +43,9 @@ google.auth.getClient({
 let buff = fs.readFileSync('README-Solutions.md');
 let readmeContent = buff.toString('base64');
 
+buff = fs.readFileSync('solutions_app.yaml');
+let yamlContent = buff.toString('base64');
+
 const app = express();
 
 // Creates API connection for private solution repo and gets authUser information.
@@ -143,6 +146,20 @@ async function createUserRepo(next) {
             .catch(error => {
                 next(error);
             });
+
+        await authOctokit.repos.createFile({
+            owner: authUser.login,
+            repo: repoName,
+            path: 'app.yaml',
+            message: 'Initial Commit - Created app.yaml for App Engine deploy',
+            content: yamlContent
+        })
+            .then(() => {
+                console.log('App.yaml file created.')
+            })
+            .catch(error => {
+                next(error);
+            });
     } catch (e) {
         next(e);
     }
@@ -177,7 +194,7 @@ async function getLatestBuildId(next) {
         projectId: process.env.GCP_PROJECT_NAME,
         filter: 'tags=\"' + repoName + '\"'
     }).then(({data, headers, status}) => {
-        return data;
+        return data.builds[0].id;
     }).catch(e => {
         next(e);
     })
@@ -356,7 +373,7 @@ app.get('/build-status',
         try {
             app.locals.rendFile = 'challenge-1';
             getLatestBuildId(next).then((data) => {
-                buildId = data.builds[0].id;
+                buildId = data;
                 app.locals.buildId = buildId;
                 getBuildStatus(buildId, next).then(data => {
                     app.locals.buildStatus = data;
