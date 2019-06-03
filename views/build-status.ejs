@@ -3,11 +3,11 @@
     <div class="challenge-window">
         <div class="left-pane">
             <% if (locals.buildId == null) { %>
-                <span>You currently have no builds generated for this challenge. Test your code's functionality by
-                    pressing the "Start Autograder" button on the right side of the screen.</span>
+                <span class="login-subtitle">You currently have no builds generated for this challenge. Test your code's
+                    functionality by pressing the "Start Autograder" button on the right side of the screen.</span>
             <% } else { %>
-                <span>Current build ID: <%= locals.buildId %></span>
-                <span>Current build status: <%= locals.buildStatus %></span>
+                <span class="login-subtitle">Current build ID: <%= locals.buildId %></span>
+                <span class="login-subtitle">Current build status: <%= locals.buildStatus %></span>
             <% } %>
         </div>
         <div class="right-pane">

@@ -217,62 +217,65 @@ async function getBuildStatus(id, next) {
 }
 
 async function beginCloudBuild(next) {
+    const challengeOneSteps = [
+        {
+            name: 'gcr.io/cloud-builders/gsutil',
+            args: [
+                'cp',
+                'gs://' + bucketName + '/' + archiveName,
+                '.'
+            ]
+        },
+        {
+            name: 'ubuntu',
+            args: [
+                'mkdir',
+                repoName
+            ]
+        },
+        {
+            name: 'ubuntu',
+            args: [
+                'tar',
+                '-xvzf',
+                './' + archiveName,
+                '-C',
+                repoName,
+                '--strip-components',
+                '1'
+            ]
+        },
+        {
+            name: 'gcr.io/cloud-builders/gcloud',
+            args: [
+                'app',
+                'deploy',
+                '-v',
+                repoName,
+                '--no-promote'
+            ],
+            dir: './' + repoName
+        },
+        {
+            name: 'gcr.io/cloud-builders/curl',
+            args: [
+                '-X',
+                'POST',
+                '-H',
+                'Content-Type: text/plain',
+                '-d',
+                'Hello World',
+                '--fail',
+                'https://' + repoName + '-dot-astral-subject-238413.appspot.com/'
+            ]
+        }
+    ];
+
     return await cloudBuild.projects.builds.create({
         auth: cloudAuthUser,
         projectId: process.env.GCP_PROJECT_NAME,
         requestBody: {
-            steps: [
-                {
-                    name: 'gcr.io/cloud-builders/gsutil',
-                    args: [
-                        'cp',
-                        'gs://' + bucketName + '/' + archiveName,
-                        '.'
-                    ]
-                },
-                {
-                    name: 'ubuntu',
-                    args: [
-                        'mkdir',
-                        repoName
-                    ]
-                },
-                {
-                    name: 'ubuntu',
-                    args: [
-                        'tar',
-                        '-xvzf',
-                        './' + archiveName,
-                        '-C',
-                        repoName,
-                        '--strip-components',
-                        '1'
-                    ]
-                },
-                {
-                    name: 'gcr.io/cloud-builders/gcloud',
-                    args: [
-                        'app',
-                        'deploy',
-                        '-v',
-                        repoName,
-                        '--no-promote'
-                    ],
-                    dir: './' + repoName
-                },
-                {
-                    name: 'gcr.io/cloud-builders/curl',
-                    args: [
-                        '-H',
-                        'Content-Type: application/x-www-form-urlencoded',
-                        '-d',
-                        'name=Jimmy&occupation=Space%20Cowboy',
-                        '-X',
-                        'POST',
-                        'https://' + repoName + '-dot-astral-subject-238413.appspot.com/'
-                    ]
-                }
-            ],
+            steps: challengeOneSteps,
             tags: [repoName + '-' + currentChallenge]
         }
     }).then(({data, headers, status}) => {

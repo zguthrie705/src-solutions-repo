@@ -1,0 +1,57 @@
+<% include challenge-header %>
+<div class="setup-background">
+    <div class="challenge-window">
+        <div class="left-pane">
+            <div class="challenge-title">
+                <span>Challenge #2</span>
+            </div>
+            <div class="scrollable-body">
+                <div class="challenge-description">
+                    <span class="description-text">The circus has come to Savannah! This circus is renowned all over the
+                        world for its incredible animal-based acts, and Charon Cruises has been hired by the city to
+                        transport some of these acts across the river. Due to a miscommunication, however, a pack of
+                        ferocious lions has ended up in the same pen as a set of acrobatic sheep. Time is of the
+                        essence and the company has come to your team for help solving this conundrum.</span>
+                    <span class="description-text">The team at Charon Cruises gives you the following guidelines:</span>
+                    <ul class="challenge-list">
+                        <li>The lions and sheep must be moved across the river in the fewest number of moves possible</li>
+                        <li>There must be at least one lion/sheep on the boat in order to move from one riverbank to the
+                            other</li>
+                        <li>If there are more lions than sheep in any location, the lions will eat the sheep</li>
+                    </ul>
+                    <span class="description-text">
+                        Write an algorithm on your web server. This should take in the number of lions, sheep, and
+                        available space in the boat in a HTTP POST body, and return the minimum number of steps it
+                        takes to move all of the animals across the river.
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="right-pane">
+            <div class="challenge-description">
+                <span class="login-title">Deliverable</span>
+                <span class="description-text">The following files must be pushed to your repository:</span>
+                <ul class="challenge-list">
+                    <li>The source code for your web server</li>
+                    <li>A Dockerfile that generates an image from your source code</li>
+                </ul>
+                <span class="login-title">Example</span>
+                <ul class="challenge-list">
+                    <li>Input:
+                        <ul>
+                            <li>POST /circus-planning</li>
+                            <li>Request body: {lions:3, sheep:3, space:2}</li>
+                        </ul>
+                    </li>
+                    <li>Output:
+                        <ul>
+                            <li>200 Status</li>
+                            <li>Response body: 11</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<% include challenge-footer %>
