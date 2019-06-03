@@ -7,7 +7,7 @@ Create a clone of this Git repository on your local machine. You will be able to
  this repo.
 
 ### Returning to the Challenge
-Click [the following link](https://astral-subject-238413.appspot.com/) to return to the Recruiting 
+Click [the following link](https://corded-shard-229822.appspot.com/) to return to the Recruiting 
  Challenge website. The challenge descriptions provided below will also be shown on the website.
 
 ## The Challenge

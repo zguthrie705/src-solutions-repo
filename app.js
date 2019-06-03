@@ -20,8 +20,7 @@ const {Storage} = require('@google-cloud/storage');
 const {google} = require('googleapis');
 
 const storage = new Storage();
-const bucketName = 'solutions-' + process.env.GCP_PROJECT_NAME;
-const storageBucket = storage.bucket(bucketName);
+const storageBucket = storage.bucket(process.env.GCP_SOLUTIONS_BUCKET);
 
 const cloudBuild = google.cloudbuild('v1');
 
@@ -222,7 +221,7 @@ async function beginCloudBuild(next) {
             name: 'gcr.io/cloud-builders/gsutil',
             args: [
                 'cp',
-                'gs://' + bucketName + '/' + archiveName,
+                'gs://' + process.env.GCP_SOLUTIONS_BUCKET + '/' + archiveName,
                 '.'
             ]
         },
@@ -266,7 +265,7 @@ async function beginCloudBuild(next) {
                 '-d',
                 'Hello World',
                 '--fail',
-                'https://' + repoName + '-dot-astral-subject-238413.appspot.com/'
+                'https://' + repoName + '-dot-corded-shard-229822.appspot.com/'
             ]
         }
     ];
