@@ -251,7 +251,8 @@ async function beginCloudBuild(next) {
                 'deploy',
                 '-v',
                 repoName,
-                '--no-promote'
+                '--no-promote',
+                '--verbosity=debug'
             ],
             dir: './' + repoName
         },

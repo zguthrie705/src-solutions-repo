@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node getEnv.js && node ./bin/www"
+    "start": "node ./bin/www"
   },
   "dependencies": {
     "@google-cloud/storage": "^2.5.0",
